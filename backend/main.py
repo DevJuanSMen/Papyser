@@ -40,6 +40,10 @@ app.include_router(purchases_router, prefix="/api/purchases", tags=["Purchases"]
 app.include_router(bids_router, prefix="/api/bids", tags=["Bids"])
 app.include_router(suppliers_router, prefix="/api/suppliers", tags=["Suppliers"])
 
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok"}
+
 # ── Servir Frontend estático ──
 frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
 if os.path.exists(frontend_path):
