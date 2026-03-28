@@ -145,8 +145,10 @@ async function processUpload(file) {
             ${result.summary ? `<p style="color:var(--text-secondary);font-size:0.85rem;padding:12px;background:var(--bg-glass);border-radius:var(--radius-sm);">${result.summary}</p>` : ''}
             <div style="margin-top:16px;">
                 <details>
-                    <summary style="cursor:pointer;color:var(--accent-primary);font-size:0.85rem;">Ver datos extraídos (JSON)</summary>
-                    <pre style="background:var(--bg-glass);padding:12px;border-radius:var(--radius-sm);overflow-x:auto;font-size:0.8rem;margin-top:8px;max-height:300px;overflow-y:auto;">${JSON.stringify(result.extracted_data, null, 2)}</pre>
+                    <summary style="cursor:pointer;color:var(--accent-primary);font-size:0.85rem;font-weight:600;margin-bottom:10px;">Ver tabla de datos extraídos</summary>
+                    <div style="background:var(--bg-glass);padding:12px;border-radius:var(--radius-sm);margin-top:8px;">
+                        ${renderExtractedDataTable(result.extracted_data)}
+                    </div>
                 </details>
             </div>
         `;
@@ -170,6 +172,9 @@ async function showDocumentDetail(docId) {
             try { extractedData = JSON.parse(extractedData); } catch {}
         }
         
+        window.currentExportData = extractedData;
+        window.currentExportFilename = doc.filename || 'documento';
+        
         openModal(`Documento #${doc.id}`, `
             <div class="form-grid">
                 <div class="form-group"><label>Archivo</label><p>${doc.filename}</p></div>
@@ -178,11 +183,94 @@ async function showDocumentDetail(docId) {
                 <div class="form-group"><label>Fecha</label><p>${formatDate(doc.created_at)}</p></div>
             </div>
             <div style="margin-top:18px;">
-                <label style="font-size:0.8rem;font-weight:500;color:var(--text-secondary);">Datos Extraídos</label>
-                <pre style="background:var(--bg-glass);padding:14px;border-radius:var(--radius-sm);overflow-x:auto;font-size:0.8rem;margin-top:6px;max-height:400px;overflow-y:auto;">${JSON.stringify(extractedData, null, 2)}</pre>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <label style="font-size:0.9rem;font-weight:600;color:var(--text-primary);">Datos Extraídos</label>
+                    <button class="btn btn-primary" onclick="downloadCSV()" style="font-size:0.8rem; padding: 6px 12px;">
+                        <i data-lucide="download"></i> Exportar CSV Excel
+                    </button>
+                </div>
+                <div style="background:var(--bg-glass);padding:14px;border-radius:var(--radius-sm);overflow-x:auto;max-height:400px;overflow-y:auto;">
+                    ${renderExtractedDataTable(extractedData)}
+                </div>
             </div>
         `, '<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>');
     } catch (err) {
         showToast('Error: ' + err.message, 'error');
     }
+}
+
+// ── Helpers para Tablas y Exportación CSV ──
+
+function formatKey(key) {
+    if (!key) return '';
+    return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function renderExtractedDataTable(data) {
+    if (!data) return '<p>No hay datos extraídos</p>';
+    if (typeof data !== 'object') return `<p>${data}</p>`;
+    
+    let html = `<table style="width:100%; border-collapse: collapse; text-align:left; font-size:0.85rem;"><tbody>`;
+    for (const [key, val] of Object.entries(data)) {
+        const thStyle = "padding:8px; border-bottom:1px solid rgba(255,255,255,0.05); color:var(--text-secondary); width:35%; vertical-align:top;";
+        const tdStyle = "padding:8px; border-bottom:1px solid rgba(255,255,255,0.05); color:var(--text-primary); font-weight:500;";
+        
+        if (Array.isArray(val) && val.length > 0 && typeof val[0] === 'object') {
+            const headers = Object.keys(val[0]);
+            let subtable = `<div style="overflow-x:auto;"><table style="width:100%; border-collapse: collapse; font-size: 0.8rem; margin: 8px 0; background: rgba(0,0,0,0.1); border-radius: 6px;"><thead><tr>`;
+            headers.forEach(h => subtable += `<th style="padding:6px 10px; border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-secondary);">${formatKey(h)}</th>`);
+            subtable += `</tr></thead><tbody>`;
+            val.forEach(row => {
+                subtable += `<tr>`;
+                headers.forEach(h => subtable += `<td style="padding:6px 10px; border-bottom:1px solid rgba(255,255,255,0.05);">${row[h] !== null ? row[h] : '-'}</td>`);
+                subtable += `</tr>`;
+            });
+            subtable += `</tbody></table></div>`;
+            html += `<tr><th style="${thStyle}">${formatKey(key)}</th><td style="${tdStyle}">${subtable}</td></tr>`;
+        } else if (Array.isArray(val)) {
+            html += `<tr><th style="${thStyle}">${formatKey(key)}</th><td style="${tdStyle}">${val.join(', ')}</td></tr>`;
+        } else if (typeof val === 'object' && val !== null) {
+            html += `<tr><th style="${thStyle}">${formatKey(key)}</th><td style="${tdStyle}">${renderExtractedDataTable(val)}</td></tr>`;
+        } else {
+            html += `<tr><th style="${thStyle}">${formatKey(key)}</th><td style="${tdStyle}">${val !== null ? val : '-'}</td></tr>`;
+        }
+    }
+    html += `</tbody></table>`;
+    return html;
+}
+
+function downloadCSV() {
+    const data = window.currentExportData;
+    if (!data) return;
+    
+    let csv = '';
+    
+    for (const [k, v] of Object.entries(data)) {
+        if (typeof v !== 'object') {
+            csv += `"${formatKey(k)}","${v !== null ? String(v).replace(/"/g, '""') : ''}"\n`;
+        }
+    }
+    csv += '\n';
+    
+    for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v) && v.length > 0 && typeof v[0] === 'object') {
+            csv += `--- ${formatKey(k).toUpperCase()} ---\n`;
+            const headers = Object.keys(v[0]);
+            csv += headers.map(h => `"${formatKey(h)}"`).join(',') + '\n';
+            v.forEach(row => {
+                csv += headers.map(h => `"${row[h] !== null ? String(row[h]).replace(/"/g, '""') : ''}"`).join(',') + '\n';
+            });
+            csv += '\n';
+        }
+    }
+    
+    // BOM para que Excel lea UTF-8 correctamente
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' }); 
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (window.currentExportFilename) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
