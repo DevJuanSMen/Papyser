@@ -53,7 +53,3 @@ if os.path.exists(frontend_path):
 async def startup():
     """Inicializar DB al arrancar."""
     init_db()
-
-@app.get("/api/health")
-def health_check():
-    return {"status": "ok", "service": "Papyser IA", "version": "2.0.0"}
