@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papyser IA — Compras & Licitaciones Inteligentes</title>
+    <meta name="description" content="Sistema inteligente de gestión de Compras y Licitaciones con IA para Papyser">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Page (shown when not authenticated) -->
+        <div id="login-page" class="login-page">
+            <div class="login-bg-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+            </div>
+            <div class="login-container">
+                <div class="login-card glass-card">
+                    <div class="login-header">
+                        <div class="login-logo">
+                            <i data-lucide="brain-circuit"></i>
+                        </div>
+                        <h1>Papyser <span class="gradient-text">IA</span></h1>
+                        <p>Compras & Licitaciones Inteligentes</p>
+                    </div>
+                    <form id="login-form">
+                        <div class="form-field">
+                            <label for="login-username">
+                                <i data-lucide="user"></i> Usuario
+                            </label>
+                            <input type="text" id="login-username" placeholder="Ingresa tu usuario" required autocomplete="username">
+                        </div>
+                        <div class="form-field">
+                            <label for="login-password">
+                                <i data-lucide="lock"></i> Contraseña
+                            </label>
+                            <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn-login" id="btn-login">
+                            <span>Iniciar Sesión</span>
+                            <i data-lucide="arrow-right"></i>
+                        </button>
+                        <div id="login-error" class="login-error hidden"></div>
+                    </form>
+                    <div class="login-footer">
+                        <p>Sistema de gestión inteligente con IA</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App Layout (shown when authenticated) -->
+        <div id="main-layout" class="main-layout hidden">
+            <!-- Sidebar -->
+            <aside id="sidebar" class="sidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-logo">
+                        <i data-lucide="brain-circuit"></i>
+                        <span>Papyser <strong>IA</strong></span>
+                    </div>
+                    <button id="sidebar-toggle" class="sidebar-toggle">
+                        <i data-lucide="panel-left-close"></i>
+                    </button>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="#/dashboard" class="nav-item active" data-page="dashboard">
+                        <i data-lucide="layout-dashboard"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <div class="nav-section-label">MÓDULOS</div>
+                    <a href="#/documents" class="nav-item" data-page="documents">
+                        <i data-lucide="file-search"></i>
+                        <span>IA Documental</span>
+                    </a>
+                    <a href="#/purchases" class="nav-item" data-page="purchases">
+                        <i data-lucide="shopping-cart"></i>
+                        <span>Compras</span>
+                    </a>
+                    <a href="#/bids" class="nav-item" data-page="bids">
+                        <i data-lucide="scroll-text"></i>
+                        <span>Licitaciones</span>
+                    </a>
+                    <a href="#/suppliers" class="nav-item" data-page="suppliers">
+                        <i data-lucide="building-2"></i>
+                        <span>Proveedores</span>
+                    </a>
+                    <div class="nav-section-label">SISTEMA</div>
+                    <a href="#/settings" class="nav-item" data-page="settings" id="nav-settings">
+                        <i data-lucide="settings"></i>
+                        <span>Configuración</span>
+                    </a>
+                </nav>
+                <div class="sidebar-footer">
+                    <div class="user-info">
+                        <div class="user-avatar" id="user-avatar">CA</div>
+                        <div class="user-details">
+                            <span class="user-name" id="user-name">Usuario</span>
+                            <span class="user-role" id="user-role">Rol</span>
+                        </div>
+                    </div>
+                    <button id="btn-logout" class="btn-logout" title="Cerrar sesión">
+                        <i data-lucide="log-out"></i>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <header class="top-bar">
+                    <div class="top-bar-left">
+                        <button id="mobile-menu-btn" class="mobile-menu-btn">
+                            <i data-lucide="menu"></i>
+                        </button>
+                        <h2 id="page-title">Dashboard</h2>
+                    </div>
+                    <div class="top-bar-right">
+                        <div class="search-box">
+                            <i data-lucide="search"></i>
+                            <input type="text" placeholder="Buscar..." id="global-search">
+                        </div>
+                        <button class="notification-btn" id="notification-btn">
+                            <i data-lucide="bell"></i>
+                            <span class="notification-badge hidden" id="notification-badge">0</span>
+                        </button>
+                    </div>
+                </header>
+                <div id="page-content" class="page-content">
+                    <!-- Dynamic page content rendered here -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal template -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal-container glass-card" id="modal-container">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal</h3>
+                <button class="modal-close" id="modal-close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer" id="modal-footer"></div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="pages/dashboard.js"></script>
+    <script src="pages/documents.js"></script>
+    <script src="pages/purchases.js"></script>
+    <script src="pages/bids.js"></script>
+    <script src="pages/suppliers.js"></script>
+    <script src="pages/settings.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
